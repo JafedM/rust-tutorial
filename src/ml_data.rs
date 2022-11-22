@@ -31,10 +31,10 @@ pub struct TreeNode {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MLDataContainer {
-    element_statistics: MLData,
+    pub element_statistics: MLData,
 }
 
-fn read_ml_json(path: &Path) -> MLDataContainer{
+pub fn read_ml_json(path: &Path) -> MLDataContainer{
 
     let json_str = fs::read_to_string(path).unwrap();
 
@@ -86,6 +86,7 @@ mod test{
         {
             "name": "John Doe",
             "age": 43,
+            "height": 1,
             "phones": [
                 "+44 1234567",
                 "+44 2345678"
@@ -101,7 +102,7 @@ mod test{
 
     #[test]
     fn load_json_test(){
-        let path = Path::new("resources/1645511997141_M8INRNFV6O_curr.jso");
+        let path = Path::new("resources/1645511997141_M8INRNFV6O_curr.json");
         let data = read_ml_json(&path);
 
         println!("{}", data.element_statistics.nodes.len());

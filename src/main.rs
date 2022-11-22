@@ -1,6 +1,94 @@
 mod ml_data;
+use crate::ml_data::read_ml_json;
+use crate::ml_data::MLDataContainer;
+use crate::ml_data::Node;
+use std::path::Path;
+use std::collections::HashSet;
 
-fn main() {}
+
+
+pub fn buscar_xx( data : &MLDataContainer ) -> Option<Node> {
+
+    //Buscar nodo con el XX
+    for i in 0..data.element_statistics.nodes.len() {
+        if data.element_statistics.nodes[i].a.contains_key("XX"){
+            return Some(data.element_statistics.nodes[i].clone());
+        }
+    }
+    
+    return None;
+}
+
+
+
+pub fn vec_nodos( data : &MLDataContainer ) -> Vec<Node>{
+    //Crear un vector con todos los nodos
+    let mut nodes : Vec<Node> = Vec::new();
+    
+    for i in 0..data.element_statistics.nodes.len() {
+        nodes.push( data.element_statistics.nodes[i].clone() );
+    }
+
+    return nodes;
+}
+
+pub fn corr(node_1:&Node, node_2:&Node) -> f64 {
+    //Variables para contar el total de atributos y los positivos
+    let mut positivos:f64 = 0.0;
+
+    //HashSet para quitar los que vamos a excluir
+    let not_coutn = HashSet::from(["HT","LT", "TP", "WH"]);
+
+    //Calcular correlacion
+    for token in node_1.a.keys(){
+        if !not_coutn.contains(&token[..]) &&  node_2.a.contains_key( token ) && node_1.a[token]==node_2.a[token]{
+            positivos += 1.0;
+        }
+    }
+
+    let correlacion = positivos/(node_1.a.len() as f64 - 5.0);
+
+    return correlacion;
+
+}
+
+
+pub fn vector_corr( node_xx:&Node , vec_nodes:&Vec<Node> ) -> Vec<f64>{
+    //Crear vecor de correlacion de un nodo particular con los demas del json
+    let mut i:usize=0;
+
+    let mut correlaciones:Vec<f64> = vec![0.0; vec_nodes.len()];
+    
+    for node in vec_nodes{
+        correlaciones[i] = corr(&node_xx, &node);
+        i += 1;
+    }
+
+    return correlaciones;
+}
+
+fn main(){
+
+    //Datos donde se encuentra el xx
+    let path_old = Path::new("resources/1663154348643_8ZGUJJLLWV/ml_data/1663154348643_8ZGUJJLLWV.json");
+    let data_old = read_ml_json(&path_old);
+
+    //Json que se va a comparar
+    let path_new = Path::new("resources/1663154348643_8ZGUJJLLWV/current/1663154348643_8ZGUJJLLWV.json");
+
+    
+    let xx_node = buscar_xx( &data_old ).unwrap();
+
+    let vec_nodes = vec_nodos(&data_old );
+    let vec_cor = vector_corr( &xx_node, &vec_nodes );
+
+
+    //Imprimir correlacion si es mayor a 0.1
+    for cor in vec_cor{
+        println!("{}",cor);            
+    }
+}
+
 
 fn consume_s(s: String) -> usize {
     s.len()
